@@ -142,13 +142,13 @@ function PredictionsAdmin() {
   const save = useMutation({
     mutationFn: async (row: Partial<PredictionRow>) => {
       const payload = {
-        day: row.day,
-        time: row.time,
-        home: row.home,
-        away: row.away,
-        tip: row.tip,
-        odds: row.odds,
-        result: row.result,
+        day: row.day ?? "",
+        time: row.time ?? "",
+        home: row.home ?? "",
+        away: row.away ?? "",
+        tip: row.tip ?? "",
+        odds: row.odds ?? "",
+        result: row.result ?? "pending",
         vip: row.vip ?? false,
         sort_order: Number(row.sort_order) || 0,
       };
