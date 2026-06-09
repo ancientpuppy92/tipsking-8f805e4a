@@ -77,8 +77,7 @@ function Index() {
               )}
             >
               <t.icon className="size-4" />
-              <span className="hidden xs:inline sm:inline">{t.label}</span>
-              <span className="xs:hidden sm:hidden">{t.label.split(" ")[0]}</span>
+              <span>{t.label}</span>
             </button>
           ))}
         </nav>
