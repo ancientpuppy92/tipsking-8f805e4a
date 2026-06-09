@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Trophy, History, Tag, LogIn, ShieldCheck } from "lucide-react";
@@ -73,9 +73,14 @@ function Index() {
             <ShieldCheck className="size-6 text-primary" />
             <span className="text-lg font-extrabold tracking-tight">TipKings</span>
           </div>
-          <Button size="sm" variant="outline" onClick={() => setLoginOpen(true)}>
-            <LogIn className="size-4" /> Sign In
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="ghost" asChild>
+              <Link to="/admin">Admin</Link>
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setLoginOpen(true)}>
+              <LogIn className="size-4" /> Sign In
+            </Button>
+          </div>
         </div>
       </header>
 
