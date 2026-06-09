@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Trophy, History, Tag, LogIn, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
@@ -11,7 +12,14 @@ import { StatsBanner } from "@/components/StatsBanner";
 import { VipBanner } from "@/components/VipBanner";
 import { LoginModal } from "@/components/LoginModal";
 import { PaymentModal } from "@/components/PaymentModal";
-import { predictionsByDay, type Day } from "@/data/predictions";
+import {
+  predictionsQueryOptions,
+  winningHistoryQueryOptions,
+  groupByDay,
+  groupByDate,
+  DAYS,
+  type Day,
+} from "@/lib/predictions-api";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -23,6 +31,10 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Daily free & VIP football betting tips with a 95% success rate." },
     ],
   }),
+  loader: ({ context }) => {
+    context.queryClient.ensureQueryData(predictionsQueryOptions());
+    context.queryClient.ensureQueryData(winningHistoryQueryOptions());
+  },
   component: Index,
 });
 
@@ -41,6 +53,11 @@ function Index() {
   const [payOpen, setPayOpen] = useState(false);
   const [payPlan, setPayPlan] = useState("7day");
 
+  const { data: predictions = [] } = useQuery(predictionsQueryOptions());
+  const { data: history = [] } = useQuery(winningHistoryQueryOptions());
+  const byDay = groupByDay(predictions);
+  const historyGroups = groupByDate(history);
+
   const openPayment = (planId = "7day") => {
     setPayPlan(planId);
     setPayOpen(true);
@@ -56,9 +73,14 @@ function Index() {
             <ShieldCheck className="size-6 text-primary" />
             <span className="text-lg font-extrabold tracking-tight">TipKings</span>
           </div>
-          <Button size="sm" variant="outline" onClick={() => setLoginOpen(true)}>
-            <LogIn className="size-4" /> Sign In
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="ghost" asChild>
+              <Link to="/admin">Admin</Link>
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setLoginOpen(true)}>
+              <LogIn className="size-4" /> Sign In
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -85,14 +107,14 @@ function Index() {
         {tab === "predictions" && (
           <div className="space-y-4">
             <DaySelector active={day} onChange={setDay} />
-            <PredictionsTable predictions={predictionsByDay[day]} onUnlock={() => openPayment("7day")} />
+            <PredictionsTable predictions={byDay[day]} onUnlock={() => openPayment("7day")} />
             <Button className="w-full bg-vip text-vip-foreground hover:bg-vip/90" onClick={() => openPayment("7day")}>
               Unlock all VIP picks
             </Button>
           </div>
         )}
 
-        {tab === "history" && <WinningHistory />}
+        {tab === "history" && <WinningHistory groups={historyGroups} />}
 
         {tab === "pricing" && <Pricing onSubscribe={openPayment} />}
       </main>

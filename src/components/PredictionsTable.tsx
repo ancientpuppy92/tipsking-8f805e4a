@@ -1,13 +1,13 @@
 import { Lock, Check, Clock } from "lucide-react";
-import type { Prediction } from "@/data/predictions";
+import type { PredictionRow } from "@/lib/predictions-api";
 import { cn } from "@/lib/utils";
 
 interface Props {
-  predictions: Prediction[];
+  predictions: PredictionRow[];
   onUnlock: () => void;
 }
 
-function ResultBadge({ result }: { result: Prediction["result"] }) {
+function ResultBadge({ result }: { result: string }) {
   if (result === "won")
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">
