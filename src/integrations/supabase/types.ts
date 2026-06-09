@@ -14,16 +14,126 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      predictions: {
+        Row: {
+          away: string
+          created_at: string
+          day: string
+          home: string
+          id: string
+          odds: string
+          result: string
+          sort_order: number
+          time: string
+          tip: string
+          updated_at: string
+          vip: boolean
+        }
+        Insert: {
+          away: string
+          created_at?: string
+          day: string
+          home: string
+          id?: string
+          odds: string
+          result?: string
+          sort_order?: number
+          time: string
+          tip: string
+          updated_at?: string
+          vip?: boolean
+        }
+        Update: {
+          away?: string
+          created_at?: string
+          day?: string
+          home?: string
+          id?: string
+          odds?: string
+          result?: string
+          sort_order?: number
+          time?: string
+          tip?: string
+          updated_at?: string
+          vip?: boolean
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      winning_history: {
+        Row: {
+          away: string
+          created_at: string
+          date: string
+          home: string
+          id: string
+          odds: string
+          score: string
+          sort_order: number
+          time: string
+          tip: string
+          updated_at: string
+        }
+        Insert: {
+          away: string
+          created_at?: string
+          date: string
+          home: string
+          id?: string
+          odds: string
+          score: string
+          sort_order?: number
+          time: string
+          tip: string
+          updated_at?: string
+        }
+        Update: {
+          away?: string
+          created_at?: string
+          date?: string
+          home?: string
+          id?: string
+          odds?: string
+          score?: string
+          sort_order?: number
+          time?: string
+          tip?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +260,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
