@@ -27,7 +27,7 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogФooter,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -278,11 +278,11 @@ function PredictionsAdmin() {
                 <Label htmlFor="vip">VIP pick (blurred for free users)</Label>
                 <Switch id="vip" checked={!!editing.vip} onCheckedChange={(v) => setEditing({ ...editing, vip: v })} />
               </div>
-              <DialogФooter>
+              <DialogFooter>
                 <Button type="submit" disabled={save.isPending}>
                   {save.isPending && <Loader2 className="size-4 animate-spin" />} Save
                 </Button>
-              </DialogФooter>
+              </DialogFooter>
             </form>
           )}
         </DialogContent>
@@ -426,11 +426,11 @@ function HistoryAdmin() {
               <Field label="Sort order">
                 <Input type="number" value={editing.sort_order ?? 0} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} />
               </Field>
-              <DialogФooter>
+              <DialogFooter>
                 <Button type="submit" disabled={save.isPending}>
                   {save.isPending && <Loader2 className="size-4 animate-spin" />} Save
                 </Button>
-              </DialogФooter>
+              </DialogFooter>
             </form>
           )}
         </DialogContent>
