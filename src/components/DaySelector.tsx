@@ -1,4 +1,4 @@
-import { DAYS, type Day } from "@/data/predictions";
+import { DAYS, type Day } from "@/lib/predictions-api";
 import { cn } from "@/lib/utils";
 
 interface Props {
