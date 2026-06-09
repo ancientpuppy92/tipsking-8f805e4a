@@ -1,10 +1,10 @@
 import { Check, CalendarDays } from "lucide-react";
-import { winningHistory } from "@/data/predictions";
+import type { HistoryGroup } from "@/lib/predictions-api";
 
-export function WinningHistory() {
+export function WinningHistory({ groups }: { groups: HistoryGroup[] }) {
   return (
     <div className="space-y-6">
-      {winningHistory.map((group) => (
+      {groups.map((group) => (
         <div key={group.date} className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="flex items-center justify-between border-b border-border bg-secondary/50 px-4 py-3">
             <div className="flex items-center gap-2 font-semibold">
@@ -15,9 +15,9 @@ export function WinningHistory() {
               {group.games.length}/{group.games.length} Won
             </span>
           </div>
-          {group.games.map((g, i) => (
+          {group.games.map((g) => (
             <div
-              key={i}
+              key={g.id}
               className="flex items-center gap-3 border-b border-border/60 px-4 py-3 text-sm last:border-0"
             >
               <span className="font-mono text-xs text-muted-foreground">{g.time}</span>
