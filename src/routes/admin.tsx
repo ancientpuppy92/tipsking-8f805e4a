@@ -310,13 +310,13 @@ function HistoryAdmin() {
   const save = useMutation({
     mutationFn: async (row: Partial<HistoryRow>) => {
       const payload = {
-        date: row.date,
-        time: row.time,
-        home: row.home,
-        away: row.away,
-        tip: row.tip,
-        odds: row.odds,
-        score: row.score,
+        date: row.date ?? "",
+        time: row.time ?? "",
+        home: row.home ?? "",
+        away: row.away ?? "",
+        tip: row.tip ?? "",
+        odds: row.odds ?? "",
+        score: row.score ?? "",
         sort_order: Number(row.sort_order) || 0,
       };
       if (row.id) {
