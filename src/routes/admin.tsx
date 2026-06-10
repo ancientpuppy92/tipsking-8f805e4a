@@ -138,6 +138,10 @@ function PredictionsAdmin() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery(predictionsQueryOptions());
   const [editing, setEditing] = useState<Partial<PredictionRow> | null>(null);
+  const [search, setSearch] = useState("");
+  const [dayFilter, setDayFilter] = useState("all");
+  const [resultFilter, setResultFilter] = useState("all");
+  const [vipFilter, setVipFilter] = useState("all");
 
   const save = useMutation({
     mutationFn: async (row: Partial<PredictionRow>) => {
@@ -181,11 +185,54 @@ function PredictionsAdmin() {
   });
 
   if (isLoading) return <Loading />;
-  const grouped = groupByDay(data ?? []);
+  const q = search.trim().toLowerCase();
+  const filtered = (data ?? []).filter((p) => {
+    if (dayFilter !== "all" && p.day !== dayFilter) return false;
+    if (resultFilter !== "all" && p.result !== resultFilter) return false;
+    if (vipFilter === "vip" && !p.vip) return false;
+    if (vipFilter === "free" && p.vip) return false;
+    if (q && !`${p.home} ${p.away} ${p.tip}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const grouped = groupByDay(filtered);
+  const visibleDays = dayFilter === "all" ? DAYS : DAYS.filter((d) => d === dayFilter);
+  const matchCount = filtered.length;
 
   return (
     <div className="space-y-6">
-      {DAYS.map((day) => (
+      <div className="space-y-3 rounded-xl border border-border bg-card p-3">
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by team or tip…"
+        />
+        <div className="grid grid-cols-3 gap-2">
+          <Select value={dayFilter} onValueChange={setDayFilter}>
+            <SelectTrigger><SelectValue placeholder="Day" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All days</SelectItem>
+              {DAYS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={resultFilter} onValueChange={setResultFilter}>
+            <SelectTrigger><SelectValue placeholder="Result" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All results</SelectItem>
+              {RESULTS.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={vipFilter} onValueChange={setVipFilter}>
+            <SelectTrigger><SelectValue placeholder="VIP" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All picks</SelectItem>
+              <SelectItem value="vip">VIP only</SelectItem>
+              <SelectItem value="free">Free only</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <p className="text-xs text-muted-foreground">{matchCount} match{matchCount === 1 ? "" : "es"}</p>
+      </div>
+      {visibleDays.map((day) => (
         <div key={day} className="overflow-hidden rounded-xl border border-border bg-card">
           <div className="flex items-center justify-between border-b border-border bg-secondary/50 px-4 py-2.5">
             <span className="font-semibold">{day}</span>
@@ -306,6 +353,8 @@ function HistoryAdmin() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery(winningHistoryQueryOptions());
   const [editing, setEditing] = useState<Partial<HistoryRow> | null>(null);
+  const [search, setSearch] = useState("");
+  const [dateFilter, setDateFilter] = useState("all");
 
   const save = useMutation({
     mutationFn: async (row: Partial<HistoryRow>) => {
@@ -348,13 +397,37 @@ function HistoryAdmin() {
   });
 
   if (isLoading) return <Loading />;
-  const groups = groupByDate(data ?? []);
+  const q = search.trim().toLowerCase();
+  const allDates = Array.from(new Set((data ?? []).map((r) => r.date)));
+  const filtered = (data ?? []).filter((g) => {
+    if (dateFilter !== "all" && g.date !== dateFilter) return false;
+    if (q && !`${g.home} ${g.away} ${g.tip}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const groups = groupByDate(filtered);
+  const matchCount = filtered.length;
 
   return (
     <div className="space-y-6">
       <Button onClick={() => setEditing(emptyHistory())}>
         <Plus className="size-4" /> Add winning entry
       </Button>
+
+      <div className="space-y-3 rounded-xl border border-border bg-card p-3">
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by team or tip…"
+        />
+        <Select value={dateFilter} onValueChange={setDateFilter}>
+          <SelectTrigger><SelectValue placeholder="Date" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All dates</SelectItem>
+            {allDates.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">{matchCount} match{matchCount === 1 ? "" : "es"}</p>
+      </div>
 
       {groups.map((group) => (
         <div key={group.date} className="overflow-hidden rounded-xl border border-border bg-card">
