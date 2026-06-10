@@ -353,6 +353,8 @@ function HistoryAdmin() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery(winningHistoryQueryOptions());
   const [editing, setEditing] = useState<Partial<HistoryRow> | null>(null);
+  const [search, setSearch] = useState("");
+  const [dateFilter, setDateFilter] = useState("all");
 
   const save = useMutation({
     mutationFn: async (row: Partial<HistoryRow>) => {
@@ -395,13 +397,37 @@ function HistoryAdmin() {
   });
 
   if (isLoading) return <Loading />;
-  const groups = groupByDate(data ?? []);
+  const q = search.trim().toLowerCase();
+  const allDates = Array.from(new Set((data ?? []).map((r) => r.date)));
+  const filtered = (data ?? []).filter((g) => {
+    if (dateFilter !== "all" && g.date !== dateFilter) return false;
+    if (q && !`${g.home} ${g.away} ${g.tip}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  const groups = groupByDate(filtered);
+  const matchCount = filtered.length;
 
   return (
     <div className="space-y-6">
       <Button onClick={() => setEditing(emptyHistory())}>
         <Plus className="size-4" /> Add winning entry
       </Button>
+
+      <div className="space-y-3 rounded-xl border border-border bg-card p-3">
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search by team or tip…"
+        />
+        <Select value={dateFilter} onValueChange={setDateFilter}>
+          <SelectTrigger><SelectValue placeholder="Date" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All dates</SelectItem>
+            {allDates.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">{matchCount} match{matchCount === 1 ? "" : "es"}</p>
+      </div>
 
       {groups.map((group) => (
         <div key={group.date} className="overflow-hidden rounded-xl border border-border bg-card">
