@@ -16,6 +16,7 @@ export interface PredictionRow {
   result: string;
   vip: boolean;
   sort_order: number;
+  updated_at: string;
 }
 
 export interface HistoryRow {
@@ -28,6 +29,7 @@ export interface HistoryRow {
   odds: string;
   score: string;
   sort_order: number;
+  updated_at: string;
 }
 
 export async function fetchPredictions(): Promise<PredictionRow[]> {

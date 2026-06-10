@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Plus, Pencil, Trash2, LogOut, ShieldCheck, ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
   predictionsQueryOptions,
@@ -31,8 +31,24 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import {
+  savePrediction,
+  deletePrediction,
+  saveHistory,
+  deleteHistory,
+} from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -138,31 +154,32 @@ function PredictionsAdmin() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery(predictionsQueryOptions());
   const [editing, setEditing] = useState<Partial<PredictionRow> | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PredictionRow | null>(null);
   const [search, setSearch] = useState("");
   const [dayFilter, setDayFilter] = useState("all");
   const [resultFilter, setResultFilter] = useState("all");
   const [vipFilter, setVipFilter] = useState("all");
+  const savePredictionFn = useServerFn(savePrediction);
+  const deletePredictionFn = useServerFn(deletePrediction);
 
   const save = useMutation({
     mutationFn: async (row: Partial<PredictionRow>) => {
-      const payload = {
-        day: row.day ?? "",
-        time: row.time ?? "",
-        home: row.home ?? "",
-        away: row.away ?? "",
-        tip: row.tip ?? "",
-        odds: row.odds ?? "",
-        result: row.result ?? "pending",
-        vip: row.vip ?? false,
-        sort_order: Number(row.sort_order) || 0,
-      };
-      if (row.id) {
-        const { error } = await supabase.from("predictions").update(payload).eq("id", row.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("predictions").insert(payload);
-        if (error) throw error;
-      }
+      return savePredictionFn({
+        data: {
+          id: row.id,
+          expectedUpdatedAt: row.updated_at,
+          day: (row.day ?? "Wed") as
+            | "Wed" | "Thu" | "Fri" | "Sat" | "Sun" | "Mon" | "Tue",
+          time: row.time ?? "",
+          home: row.home ?? "",
+          away: row.away ?? "",
+          tip: row.tip ?? "",
+          odds: row.odds ?? "",
+          result: (row.result ?? "pending") as "pending" | "won" | "lost",
+          vip: row.vip ?? false,
+          sort_order: Number(row.sort_order) || 0,
+        },
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["predictions"] });
@@ -173,12 +190,10 @@ function PredictionsAdmin() {
   });
 
   const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("predictions").delete().eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: async (id: string) => deletePredictionFn({ data: { id } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["predictions"] });
+      setDeleteTarget(null);
       toast.success("Deleted");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed"),
@@ -258,7 +273,7 @@ function PredictionsAdmin() {
               <Button size="icon" variant="ghost" onClick={() => setEditing(p)}>
                 <Pencil className="size-4" />
               </Button>
-              <Button size="icon" variant="ghost" onClick={() => remove.mutate(p.id)}>
+              <Button size="icon" variant="ghost" onClick={() => setDeleteTarget(p)}>
                 <Trash2 className="size-4 text-destructive" />
               </Button>
             </div>
@@ -334,6 +349,30 @@ function PredictionsAdmin() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this prediction?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget && `${deleteTarget.home} vs ${deleteTarget.away} (${deleteTarget.day})`}
+              {" — this can't be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={remove.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (deleteTarget) remove.mutate(deleteTarget.id);
+              }}
+              disabled={remove.isPending}
+            >
+              {remove.isPending && <Loader2 className="size-4 animate-spin" />} Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -353,28 +392,28 @@ function HistoryAdmin() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery(winningHistoryQueryOptions());
   const [editing, setEditing] = useState<Partial<HistoryRow> | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<HistoryRow | null>(null);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("all");
+  const saveHistoryFn = useServerFn(saveHistory);
+  const deleteHistoryFn = useServerFn(deleteHistory);
 
   const save = useMutation({
     mutationFn: async (row: Partial<HistoryRow>) => {
-      const payload = {
-        date: row.date ?? "",
-        time: row.time ?? "",
-        home: row.home ?? "",
-        away: row.away ?? "",
-        tip: row.tip ?? "",
-        odds: row.odds ?? "",
-        score: row.score ?? "",
-        sort_order: Number(row.sort_order) || 0,
-      };
-      if (row.id) {
-        const { error } = await supabase.from("winning_history").update(payload).eq("id", row.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("winning_history").insert(payload);
-        if (error) throw error;
-      }
+      return saveHistoryFn({
+        data: {
+          id: row.id,
+          expectedUpdatedAt: row.updated_at,
+          date: row.date ?? "",
+          time: row.time ?? "",
+          home: row.home ?? "",
+          away: row.away ?? "",
+          tip: row.tip ?? "",
+          odds: row.odds ?? "",
+          score: row.score ?? "",
+          sort_order: Number(row.sort_order) || 0,
+        },
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["winning_history"] });
@@ -385,12 +424,10 @@ function HistoryAdmin() {
   });
 
   const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("winning_history").delete().eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: async (id: string) => deleteHistoryFn({ data: { id } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["winning_history"] });
+      setDeleteTarget(null);
       toast.success("Deleted");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed"),
@@ -448,7 +485,7 @@ function HistoryAdmin() {
               <Button size="icon" variant="ghost" onClick={() => setEditing(g)}>
                 <Pencil className="size-4" />
               </Button>
-              <Button size="icon" variant="ghost" onClick={() => remove.mutate(g.id)}>
+              <Button size="icon" variant="ghost" onClick={() => setDeleteTarget(g)}>
                 <Trash2 className="size-4 text-destructive" />
               </Button>
             </div>
@@ -508,6 +545,30 @@ function HistoryAdmin() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this entry?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget && `${deleteTarget.home} vs ${deleteTarget.away} (${deleteTarget.date})`}
+              {" — this can't be undone."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={remove.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (deleteTarget) remove.mutate(deleteTarget.id);
+              }}
+              disabled={remove.isPending}
+            >
+              {remove.isPending && <Loader2 className="size-4 animate-spin" />} Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
