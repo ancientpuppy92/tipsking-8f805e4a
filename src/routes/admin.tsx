@@ -155,31 +155,31 @@ function PredictionsAdmin() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery(predictionsQueryOptions());
   const [editing, setEditing] = useState<Partial<PredictionRow> | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PredictionRow | null>(null);
   const [search, setSearch] = useState("");
   const [dayFilter, setDayFilter] = useState("all");
   const [resultFilter, setResultFilter] = useState("all");
   const [vipFilter, setVipFilter] = useState("all");
+  const savePredictionFn = useServerFn(savePrediction);
+  const deletePredictionFn = useServerFn(deletePrediction);
 
   const save = useMutation({
     mutationFn: async (row: Partial<PredictionRow>) => {
-      const payload = {
-        day: row.day ?? "",
-        time: row.time ?? "",
-        home: row.home ?? "",
-        away: row.away ?? "",
-        tip: row.tip ?? "",
-        odds: row.odds ?? "",
-        result: row.result ?? "pending",
-        vip: row.vip ?? false,
-        sort_order: Number(row.sort_order) || 0,
-      };
-      if (row.id) {
-        const { error } = await supabase.from("predictions").update(payload).eq("id", row.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("predictions").insert(payload);
-        if (error) throw error;
-      }
+      return savePredictionFn({
+        data: {
+          id: row.id,
+          expectedUpdatedAt: row.updated_at,
+          day: (row.day ?? "Wed") as PredictionRow["day"],
+          time: row.time ?? "",
+          home: row.home ?? "",
+          away: row.away ?? "",
+          tip: row.tip ?? "",
+          odds: row.odds ?? "",
+          result: (row.result ?? "pending") as "pending" | "won" | "lost",
+          vip: row.vip ?? false,
+          sort_order: Number(row.sort_order) || 0,
+        },
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["predictions"] });
@@ -190,12 +190,10 @@ function PredictionsAdmin() {
   });
 
   const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("predictions").delete().eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: async (id: string) => deletePredictionFn({ data: { id } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["predictions"] });
+      setDeleteTarget(null);
       toast.success("Deleted");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed"),
