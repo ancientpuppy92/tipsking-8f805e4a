@@ -392,28 +392,28 @@ function HistoryAdmin() {
   const qc = useQueryClient();
   const { data, isLoading } = useQuery(winningHistoryQueryOptions());
   const [editing, setEditing] = useState<Partial<HistoryRow> | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<HistoryRow | null>(null);
   const [search, setSearch] = useState("");
   const [dateFilter, setDateFilter] = useState("all");
+  const saveHistoryFn = useServerFn(saveHistory);
+  const deleteHistoryFn = useServerFn(deleteHistory);
 
   const save = useMutation({
     mutationFn: async (row: Partial<HistoryRow>) => {
-      const payload = {
-        date: row.date ?? "",
-        time: row.time ?? "",
-        home: row.home ?? "",
-        away: row.away ?? "",
-        tip: row.tip ?? "",
-        odds: row.odds ?? "",
-        score: row.score ?? "",
-        sort_order: Number(row.sort_order) || 0,
-      };
-      if (row.id) {
-        const { error } = await supabase.from("winning_history").update(payload).eq("id", row.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("winning_history").insert(payload);
-        if (error) throw error;
-      }
+      return saveHistoryFn({
+        data: {
+          id: row.id,
+          expectedUpdatedAt: row.updated_at,
+          date: row.date ?? "",
+          time: row.time ?? "",
+          home: row.home ?? "",
+          away: row.away ?? "",
+          tip: row.tip ?? "",
+          odds: row.odds ?? "",
+          score: row.score ?? "",
+          sort_order: Number(row.sort_order) || 0,
+        },
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["winning_history"] });
@@ -424,12 +424,10 @@ function HistoryAdmin() {
   });
 
   const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("winning_history").delete().eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: async (id: string) => deleteHistoryFn({ data: { id } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["winning_history"] });
+      setDeleteTarget(null);
       toast.success("Deleted");
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Delete failed"),
