@@ -485,7 +485,7 @@ function HistoryAdmin() {
               <Button size="icon" variant="ghost" onClick={() => setEditing(g)}>
                 <Pencil className="size-4" />
               </Button>
-              <Button size="icon" variant="ghost" onClick={() => remove.mutate(g.id)}>
+              <Button size="icon" variant="ghost" onClick={() => setDeleteTarget(g)}>
                 <Trash2 className="size-4 text-destructive" />
               </Button>
             </div>
