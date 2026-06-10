@@ -78,14 +78,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "TipsKing" },
+      { name: "description", content: "Winning Picks Hub provides sports betting predictions and historical results." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "TipsKing" },
+      { property: "og:description", content: "Winning Picks Hub provides sports betting predictions and historical results." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "TipsKing" },
+      { name: "twitter:description", content: "Winning Picks Hub provides sports betting predictions and historical results." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/407e2919-b9b7-4a1e-a13c-380954b40022/id-preview-21ce5eb6--792d7396-8385-41f7-a573-88806fedc948.lovable.app-1781047074474.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/407e2919-b9b7-4a1e-a13c-380954b40022/id-preview-21ce5eb6--792d7396-8385-41f7-a573-88806fedc948.lovable.app-1781047074474.png" },
     ],
     links: [
       {
