@@ -273,7 +273,7 @@ function PredictionsAdmin() {
               <Button size="icon" variant="ghost" onClick={() => setEditing(p)}>
                 <Pencil className="size-4" />
               </Button>
-              <Button size="icon" variant="ghost" onClick={() => remove.mutate(p.id)}>
+              <Button size="icon" variant="ghost" onClick={() => setDeleteTarget(p)}>
                 <Trash2 className="size-4 text-destructive" />
               </Button>
             </div>
