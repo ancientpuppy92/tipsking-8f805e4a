@@ -168,7 +168,8 @@ function PredictionsAdmin() {
         data: {
           id: row.id,
           expectedUpdatedAt: row.updated_at,
-          day: (row.day ?? "Wed") as PredictionRow["day"],
+          day: (row.day ?? "Wed") as
+            | "Wed" | "Thu" | "Fri" | "Sat" | "Sun" | "Mon" | "Tue",
           time: row.time ?? "",
           home: row.home ?? "",
           away: row.away ?? "",
