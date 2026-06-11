@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as PaymentStatusRouteImport } from './routes/payment-status'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -18,6 +19,11 @@ import { Route as ApiPublicKorapayWebhookRouteImport } from './routes/api/public
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentStatusRoute = PaymentStatusRouteImport.update({
+  id: '/payment-status',
+  path: '/payment-status',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/payment-status': typeof PaymentStatusRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/korapay-webhook': typeof ApiPublicKorapayWebhookRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/payment-status': typeof PaymentStatusRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/korapay-webhook': typeof ApiPublicKorapayWebhookRoute
 }
@@ -60,6 +68,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/payment-status': typeof PaymentStatusRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/public/korapay-webhook': typeof ApiPublicKorapayWebhookRoute
 }
@@ -69,15 +78,23 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/payment-status'
     | '/sitemap.xml'
     | '/api/public/korapay-webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/auth' | '/sitemap.xml' | '/api/public/korapay-webhook'
+  to:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/payment-status'
+    | '/sitemap.xml'
+    | '/api/public/korapay-webhook'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/auth'
+    | '/payment-status'
     | '/sitemap.xml'
     | '/api/public/korapay-webhook'
   fileRoutesById: FileRoutesById
@@ -86,6 +103,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  PaymentStatusRoute: typeof PaymentStatusRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiPublicKorapayWebhookRoute: typeof ApiPublicKorapayWebhookRoute
 }
@@ -97,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payment-status': {
+      id: '/payment-status'
+      path: '/payment-status'
+      fullPath: '/payment-status'
+      preLoaderRoute: typeof PaymentStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -134,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  PaymentStatusRoute: PaymentStatusRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiPublicKorapayWebhookRoute: ApiPublicKorapayWebhookRoute,
 }
