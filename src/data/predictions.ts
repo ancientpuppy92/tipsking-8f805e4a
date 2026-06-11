@@ -93,6 +93,7 @@ export interface Plan {
   id: string;
   name: string;
   price: number;
+  priceNgn: number;
   period: string;
   features: string[];
   popular?: boolean;
@@ -103,6 +104,7 @@ export const plans: Plan[] = [
     id: "daily",
     name: "Daily",
     price: 150,
+    priceNgn: 1500,
     period: "1 Day",
     features: ["All VIP tips for 24h", "3-5 premium picks", "Avg odds 3.0+", "Telegram access"],
   },
@@ -110,6 +112,7 @@ export const plans: Plan[] = [
     id: "7day",
     name: "7-Day",
     price: 950,
+    priceNgn: 9500,
     period: "7 Days",
     popular: true,
     features: ["7 days VIP access", "Daily premium picks", "Banker of the day", "Priority support", "Telegram VIP channel"],
@@ -118,6 +121,7 @@ export const plans: Plan[] = [
     id: "30day",
     name: "30-Day",
     price: 2500,
+    priceNgn: 25000,
     period: "30 Days",
     features: ["Full month VIP", "Daily premium picks", "Banker of the day", "Priority support", "Refund guarantee"],
   },
@@ -125,6 +129,7 @@ export const plans: Plan[] = [
     id: "1year",
     name: "1-Year",
     price: 20000,
+    priceNgn: 200000,
     period: "365 Days",
     features: ["Best value — save 30%", "Year-round VIP", "All premium picks", "VIP priority support", "Exclusive jackpot tips"],
   },
@@ -143,3 +148,14 @@ export const testimonials: Testimonial[] = [
 ];
 
 export const formatKsh = (n: number) => `KSH ${n.toLocaleString()}`;
+export const formatNgn = (n: number) => `₦${n.toLocaleString()}`;
+
+export type Currency = "NGN" | "KES";
+
+export function planAmount(plan: Plan, currency: Currency) {
+  return currency === "NGN" ? plan.priceNgn : plan.price;
+}
+
+export function formatPrice(plan: Plan, currency: Currency) {
+  return currency === "NGN" ? formatNgn(plan.priceNgn) : formatKsh(plan.price);
+}
