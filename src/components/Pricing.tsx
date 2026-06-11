@@ -1,13 +1,15 @@
 import { Check, Star, Quote } from "lucide-react";
-import { plans, testimonials, formatKsh } from "@/data/predictions";
+import { plans, testimonials, formatPrice } from "@/data/predictions";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useCurrency } from "@/hooks/useCurrency";
 
 interface Props {
   onSubscribe: (planId: string) => void;
 }
 
 export function Pricing({ onSubscribe }: Props) {
+  const { currency } = useCurrency();
   return (
     <div className="space-y-10">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -28,7 +30,7 @@ export function Pricing({ onSubscribe }: Props) {
             )}
             <h3 className="text-lg font-bold">{plan.name}</h3>
             <p className="text-xs text-muted-foreground">{plan.period}</p>
-            <p className="mt-3 text-2xl font-extrabold">{formatKsh(plan.price)}</p>
+            <p className="mt-3 text-2xl font-extrabold">{formatPrice(plan, currency)}</p>
             <ul className="mt-4 flex-1 space-y-2 text-sm">
               {plan.features.map((f) => (
                 <li key={f} className="flex items-start gap-2">
