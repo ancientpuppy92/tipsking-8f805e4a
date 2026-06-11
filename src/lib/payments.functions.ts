@@ -95,3 +95,27 @@ export const initializeKorapayCharge = createServerFn({ method: "POST" })
 
     return { checkoutUrl: body.data.checkout_url, reference, currency, amount };
   });
+
+/** Verify a charge status by reference (used by the return/status page). */
+export const verifyKorapayCharge = createServerFn({ method: "GET" })
+  .inputValidator((input) => z.object({ reference: z.string().min(1).max(120) }).parse(input))
+  .handler(async ({ data }) => {
+    const secret = process.env.KORAPAY_SECRET_KEY;
+    if (!secret) throw new Error("Payment provider is not configured.");
+
+    const res = await fetch(
+      `https://api.korapay.com/merchant/api/v1/charges/${encodeURIComponent(data.reference)}`,
+      { headers: { Authorization: `Bearer ${secret}` } },
+    );
+    const body = (await res.json().catch(() => null)) as
+      | { status?: boolean; data?: { status?: string; amount?: number; currency?: string } }
+      | null;
+
+    const status = body?.data?.status ?? "pending";
+    return {
+      status,
+      success: status === "success",
+      amount: body?.data?.amount ?? null,
+      currency: body?.data?.currency ?? null,
+    };
+  });
