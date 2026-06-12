@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Plus, Pencil, Trash2, LogOut, ShieldCheck, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  predictionsQueryOptions,
+  adminPredictionsQueryOptions,
   winningHistoryQueryOptions,
   groupByDay,
   groupByDate,
@@ -152,7 +152,7 @@ const emptyPrediction = (day: string): Partial<PredictionRow> => ({
 
 function PredictionsAdmin() {
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery(predictionsQueryOptions());
+  const { data, isLoading } = useQuery(adminPredictionsQueryOptions());
   const [editing, setEditing] = useState<Partial<PredictionRow> | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<PredictionRow | null>(null);
   const [search, setSearch] = useState("");

@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getPublicPredictions } from "@/lib/predictions.functions";
 
 export const DAYS = ["Wed", "Thu", "Fri", "Sat", "Sun", "Mon", "Tue"] as const;
 export type Day = (typeof DAYS)[number];
@@ -33,6 +34,14 @@ export interface HistoryRow {
 }
 
 export async function fetchPredictions(): Promise<PredictionRow[]> {
+  return (await getPublicPredictions()) as PredictionRow[];
+}
+
+/**
+ * Admin-only feed queried directly (RLS grants admins full rows, including VIP
+ * tip/odds needed for editing). Only usable by an authenticated admin session.
+ */
+export async function fetchAdminPredictions(): Promise<PredictionRow[]> {
   const { data, error } = await supabase
     .from("predictions")
     .select("*")
@@ -53,6 +62,9 @@ export async function fetchWinningHistory(): Promise<HistoryRow[]> {
 
 export const predictionsQueryOptions = () =>
   queryOptions({ queryKey: ["predictions"], queryFn: fetchPredictions });
+
+export const adminPredictionsQueryOptions = () =>
+  queryOptions({ queryKey: ["predictions", "admin"], queryFn: fetchAdminPredictions });
 
 export const winningHistoryQueryOptions = () =>
   queryOptions({ queryKey: ["winning_history"], queryFn: fetchWinningHistory });
