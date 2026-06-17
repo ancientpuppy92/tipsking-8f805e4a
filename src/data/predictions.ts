@@ -95,6 +95,7 @@ export interface Plan {
   price: number;
   priceNgn: number;
   period: string;
+  durationDays: number;
   features: string[];
   popular?: boolean;
 }
@@ -103,34 +104,38 @@ export const plans: Plan[] = [
   {
     id: "daily",
     name: "Daily",
-    price: 150,
-    priceNgn: 1500,
+    price: 25,
+    priceNgn: 299,
     period: "1 Day",
+    durationDays: 1,
     features: ["All VIP tips for 24h", "3-5 premium picks", "Avg odds 3.0+", "Telegram access"],
   },
   {
     id: "7day",
     name: "7-Day",
-    price: 950,
-    priceNgn: 9500,
+    price: 85,
+    priceNgn: 999,
     period: "7 Days",
+    durationDays: 7,
     popular: true,
     features: ["7 days VIP access", "Daily premium picks", "Banker of the day", "Priority support", "Telegram VIP channel"],
   },
   {
     id: "30day",
     name: "30-Day",
-    price: 2500,
-    priceNgn: 25000,
+    price: 255,
+    priceNgn: 2999,
     period: "30 Days",
+    durationDays: 30,
     features: ["Full month VIP", "Daily premium picks", "Banker of the day", "Priority support", "Refund guarantee"],
   },
   {
     id: "1year",
     name: "1-Year",
-    price: 20000,
-    priceNgn: 200000,
+    price: 2125,
+    priceNgn: 24999,
     period: "365 Days",
+    durationDays: 365,
     features: ["Best value — save 30%", "Year-round VIP", "All premium picks", "VIP priority support", "Exclusive jackpot tips"],
   },
 ];
