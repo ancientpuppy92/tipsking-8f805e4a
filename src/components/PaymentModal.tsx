@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useCurrency } from "@/hooks/useCurrency";
 import { initializeKorapayCharge } from "@/lib/payments.functions";
+import { CurrencySwitch } from "@/components/CurrencySwitch";
 
 interface Props {
   open: boolean;
@@ -39,7 +40,7 @@ export function PaymentModal({ open, onOpenChange, initialPlan = "7day" }: Props
     setBusy(true);
     try {
       const { checkoutUrl } = await startCharge({
-        data: { planId: plan.id, email: email.trim(), name: name.trim() },
+        data: { planId: plan.id, email: email.trim(), name: name.trim(), currency },
       });
       window.location.href = checkoutUrl;
     } catch (err) {
@@ -54,6 +55,11 @@ export function PaymentModal({ open, onOpenChange, initialPlan = "7day" }: Props
         <DialogHeader>
           <DialogTitle>Complete your payment</DialogTitle>
         </DialogHeader>
+
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">Currency</span>
+          <CurrencySwitch />
+        </div>
 
         <div className="space-y-2">
           <p className="text-sm font-medium">Select plan</p>
