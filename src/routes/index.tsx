@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Trophy, History, Tag, LogIn, ShieldCheck } from "lucide-react";
+import { Trophy, History, Tag, LogIn, LogOut, ShieldCheck, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { DaySelector } from "@/components/DaySelector";
@@ -12,8 +12,12 @@ import { StatsBanner } from "@/components/StatsBanner";
 import { VipBanner } from "@/components/VipBanner";
 import { LoginModal } from "@/components/LoginModal";
 import { PaymentModal } from "@/components/PaymentModal";
+import { CurrencySwitch } from "@/components/CurrencySwitch";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 import {
   predictionsQueryOptions,
+  entitledPredictionsQueryOptions,
   winningHistoryQueryOptions,
   groupByDay,
   groupByDate,
@@ -53,12 +57,21 @@ function Index() {
   const [payOpen, setPayOpen] = useState(false);
   const [payPlan, setPayPlan] = useState("7day");
 
-  const { data: predictions = [] } = useQuery(predictionsQueryOptions());
+  const { session, signOut } = useAuth();
+  const { data: publicPreds = [] } = useQuery(predictionsQueryOptions());
+  const { data: entitled } = useQuery({ ...entitledPredictionsQueryOptions(), enabled: !!session });
   const { data: history = [] } = useQuery(winningHistoryQueryOptions());
+  const predictions = session && entitled?.predictions ? entitled.predictions : publicPreds;
+  const isVip = !!entitled?.active;
   const byDay = groupByDay(predictions);
   const historyGroups = groupByDate(history);
 
   const openPayment = (planId = "7day") => {
+    if (!session) {
+      toast.info("Please sign in to subscribe and unlock VIP tips.");
+      setLoginOpen(true);
+      return;
+    }
     setPayPlan(planId);
     setPayOpen(true);
   };
@@ -74,19 +87,30 @@ function Index() {
             <span className="text-lg font-extrabold tracking-tight">TipKings</span>
           </div>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="ghost" asChild>
-              <Link to="/admin">Admin</Link>
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => setLoginOpen(true)}>
-              <LogIn className="size-4" /> Sign In
-            </Button>
+            <CurrencySwitch />
+            {session ? (
+              <Button size="sm" variant="outline" onClick={() => signOut()}>
+                <LogOut className="size-4" /> Logout
+              </Button>
+            ) : (
+              <Button size="sm" variant="outline" onClick={() => setLoginOpen(true)}>
+                <LogIn className="size-4" /> Sign In
+              </Button>
+            )}
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl space-y-5 px-4 py-5">
         <StatsBanner />
-        <VipBanner onClick={() => openPayment("30day")} />
+        {isVip ? (
+          <div className="flex items-center gap-3 rounded-2xl bg-vip/15 p-4 text-vip">
+            <Crown className="size-6 shrink-0" />
+            <p className="text-sm font-semibold">Your VIP membership is active — all premium picks are unlocked below.</p>
+          </div>
+        ) : (
+          <VipBanner onClick={() => openPayment("30day")} />
+        )}
 
         <nav className="flex gap-1.5 rounded-xl border border-border bg-card p-1.5">
           {tabs.map((t) => (
@@ -108,9 +132,11 @@ function Index() {
           <div className="space-y-4">
             <DaySelector active={day} onChange={setDay} />
             <PredictionsTable predictions={byDay[day]} onUnlock={() => openPayment("7day")} />
-            <Button className="w-full bg-vip text-vip-foreground hover:bg-vip/90" onClick={() => openPayment("7day")}>
-              Unlock all VIP picks
-            </Button>
+            {!isVip && (
+              <Button className="w-full bg-vip text-vip-foreground hover:bg-vip/90" onClick={() => openPayment("7day")}>
+                Unlock all VIP picks
+              </Button>
+            )}
           </div>
         )}
 
@@ -118,6 +144,13 @@ function Index() {
 
         {tab === "pricing" && <Pricing onSubscribe={openPayment} />}
       </main>
+
+      <footer className="mx-auto max-w-3xl px-4 pb-8 pt-2 text-center">
+        <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} TipKings. Bet responsibly. 18+</p>
+        <Link to="/admin" className="mt-2 inline-block text-[11px] text-muted-foreground/60 hover:text-muted-foreground">
+          Staff login
+        </Link>
+      </footer>
 
       <LoginModal open={loginOpen} onOpenChange={setLoginOpen} />
       <PaymentModal open={payOpen} onOpenChange={setPayOpen} initialPlan={payPlan} />
