@@ -56,6 +56,7 @@ function Index() {
   const [loginOpen, setLoginOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const [payPlan, setPayPlan] = useState("7day");
+  const [pendingPlan, setPendingPlan] = useState<string | null>(null);
 
   const { session, signOut } = useAuth();
   const { data: publicPreds = [] } = useQuery(predictionsQueryOptions());
@@ -69,6 +70,7 @@ function Index() {
   const openPayment = (planId = "7day") => {
     if (!session) {
       toast.info("Please sign in to subscribe and unlock VIP tips.");
+      setPendingPlan(planId);
       setLoginOpen(true);
       return;
     }
@@ -149,7 +151,17 @@ function Index() {
         <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} TipKings. Bet responsibly. 18+</p>
       </footer>
 
-      <LoginModal open={loginOpen} onOpenChange={setLoginOpen} />
+      <LoginModal
+        open={loginOpen}
+        onOpenChange={setLoginOpen}
+        onSuccess={() => {
+          if (pendingPlan) {
+            setPayPlan(pendingPlan);
+            setPendingPlan(null);
+            setPayOpen(true);
+          }
+        }}
+      />
       <PaymentModal open={payOpen} onOpenChange={setPayOpen} initialPlan={payPlan} />
     </div>
   );
