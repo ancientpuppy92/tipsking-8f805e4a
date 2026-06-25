@@ -100,12 +100,16 @@ export interface Plan {
   popular?: boolean;
 }
 
+// Base prices are in KES. NGN is auto-converted using the current exchange rate.
+export const KES_TO_NGN = 11.6;
+const toNgn = (ksh: number) => Math.round((ksh * KES_TO_NGN) / 50) * 50;
+
 export const plans: Plan[] = [
   {
     id: "daily",
     name: "Daily",
-    price: 25,
-    priceNgn: 299,
+    price: 299,
+    priceNgn: toNgn(299),
     period: "1 Day",
     durationDays: 1,
     features: ["All VIP tips for 24h", "3-5 premium picks", "Avg odds 3.0+", "Telegram access"],
@@ -113,8 +117,8 @@ export const plans: Plan[] = [
   {
     id: "7day",
     name: "7-Day",
-    price: 85,
-    priceNgn: 999,
+    price: 999,
+    priceNgn: toNgn(999),
     period: "7 Days",
     durationDays: 7,
     popular: true,
@@ -123,8 +127,8 @@ export const plans: Plan[] = [
   {
     id: "30day",
     name: "30-Day",
-    price: 255,
-    priceNgn: 2999,
+    price: 2999,
+    priceNgn: toNgn(2999),
     period: "30 Days",
     durationDays: 30,
     features: ["Full month VIP", "Daily premium picks", "Banker of the day", "Priority support", "Refund guarantee"],
@@ -132,8 +136,8 @@ export const plans: Plan[] = [
   {
     id: "1year",
     name: "1-Year",
-    price: 2125,
-    priceNgn: 24999,
+    price: 24999,
+    priceNgn: toNgn(24999),
     period: "365 Days",
     durationDays: 365,
     features: ["Best value — save 30%", "Year-round VIP", "All premium picks", "VIP priority support", "Exclusive jackpot tips"],

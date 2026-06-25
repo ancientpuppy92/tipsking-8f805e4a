@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Trophy, History, Tag, LogIn, LogOut, ShieldCheck, Crown } from "lucide-react";
@@ -147,9 +147,6 @@ function Index() {
 
       <footer className="mx-auto max-w-3xl px-4 pb-8 pt-2 text-center">
         <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} TipKings. Bet responsibly. 18+</p>
-        <Link to="/admin" className="mt-2 inline-block text-[11px] text-muted-foreground/60 hover:text-muted-foreground">
-          Staff login
-        </Link>
       </footer>
 
       <LoginModal open={loginOpen} onOpenChange={setLoginOpen} />
