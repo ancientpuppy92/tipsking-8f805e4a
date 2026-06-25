@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useSearch } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Clock, XCircle, Loader2, ShieldCheck } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, Loader2, ShieldCheck, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { verifyKorapayCharge } from "@/lib/payments.functions";
 
