@@ -7,7 +7,16 @@ import { verifyKorapayCharge } from "@/lib/payments.functions";
 
 export const Route = createFileRoute("/payment-status")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Payment Status — TipKings" }] }),
+  head: () => ({
+    meta: [
+      { title: "Payment Status — TipKings" },
+      { name: "description", content: "Check the status of your TipKings VIP membership payment." },
+      { property: "og:title", content: "Payment Status — TipKings" },
+      { property: "og:description", content: "Check the status of your TipKings VIP membership payment." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   validateSearch: (s: Record<string, unknown>) => ({ ref: typeof s.ref === "string" ? s.ref : "" }),
   component: PaymentStatusPage,
 });

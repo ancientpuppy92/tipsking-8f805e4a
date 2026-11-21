@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { useCurrency } from "@/hooks/useCurrency";
-import { initializeKorapayCharge } from "@/lib/payments.functions";
+import { prepareKorapayModalCharge } from "@/lib/payments.functions";
 import { CurrencySwitch } from "@/components/CurrencySwitch";
 
 interface Props {
@@ -18,13 +18,57 @@ interface Props {
   initialPlan?: string;
 }
 
+interface KorapayOptions {
+  key: string;
+  reference: string;
+  amount: number;
+  currency: "NGN" | "KES";
+  customer: { name: string; email: string };
+  notification_url: string;
+  onSuccess: () => void;
+  onFailed: (error?: unknown) => void;
+  onClose: () => void;
+}
+
+declare global {
+  interface Window {
+    Korapay?: { initialize: (options: KorapayOptions) => void };
+  }
+}
+
+const KORA_SCRIPT = "https://korablobstorage.blob.core.windows.net/modal-bucket/korapay-collections.min.js";
+const KORA_PUBLIC_KEY = "pk_live_KxNb5jDg18CQtJWzJt1RdgyMNsRo4D9NanrmE7nP";
+
+function loadKoraScript(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.Korapay) {
+      resolve();
+      return;
+    }
+
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${KORA_SCRIPT}"]`);
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("Could not load Kora checkout.")), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = KORA_SCRIPT;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Could not load Kora checkout."));
+    document.body.appendChild(script);
+  });
+}
+
 export function PaymentModal({ open, onOpenChange, initialPlan = "7day" }: Props) {
   const [selected, setSelected] = useState(initialPlan);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const { currency } = useCurrency();
-  const startCharge = useServerFn(initializeKorapayCharge);
+  const startCharge = useServerFn(prepareKorapayModalCharge);
 
   useEffect(() => {
     if (open) setSelected(initialPlan);
@@ -39,10 +83,33 @@ export function PaymentModal({ open, onOpenChange, initialPlan = "7day" }: Props
     }
     setBusy(true);
     try {
-      const { checkoutUrl } = await startCharge({
+      const charge = await startCharge({
         data: { planId: plan.id, email: email.trim(), name: name.trim(), currency },
       });
-      window.location.href = checkoutUrl;
+      await loadKoraScript();
+      const kora = window.Korapay;
+      if (!kora) throw new Error("Kora checkout did not load. Please try again.");
+
+      kora.initialize({
+        key: KORA_PUBLIC_KEY,
+        reference: charge.reference,
+        amount: charge.amount,
+        currency: charge.currency,
+        customer: { name: name.trim(), email: email.trim() },
+        notification_url: charge.notificationUrl,
+        onSuccess: () => {
+          window.location.assign(`/payment-status?ref=${encodeURIComponent(charge.reference)}`);
+        },
+        onFailed: (error) => {
+          const message =
+            typeof error === "object" && error !== null && "message" in error && typeof error.message === "string"
+              ? error.message
+              : "Payment failed. Please try again.";
+          toast.error(message);
+          setBusy(false);
+        },
+        onClose: () => setBusy(false),
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not start payment.");
       setBusy(false);
@@ -100,7 +167,7 @@ export function PaymentModal({ open, onOpenChange, initialPlan = "7day" }: Props
             Pay {formatPrice(plan, currency)}
           </Button>
           <p className="text-center text-xs text-muted-foreground">
-            Secured by Korapay · Card, bank transfer & mobile money
+            Secured by Kora · Card, bank transfer & mobile money
           </p>
         </div>
       </DialogContent>

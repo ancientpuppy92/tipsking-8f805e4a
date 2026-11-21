@@ -11,7 +11,16 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Admin Sign In — TipKings" }] }),
+  head: () => ({
+    meta: [
+      { title: "Admin Sign In — TipKings" },
+      { name: "description", content: "Sign in to manage TipKings predictions and winning history." },
+      { property: "og:title", content: "Admin Sign In — TipKings" },
+      { property: "og:description", content: "Sign in to manage TipKings predictions and winning history." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AuthPage,
 });
 

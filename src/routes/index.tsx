@@ -33,6 +33,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "Daily free & VIP football betting tips with a 95% success rate. Winning history, premium picks, and instant M-Pesa payments." },
       { property: "og:title", content: "TipKings — Kenya's #1 Football Prediction Tips" },
       { property: "og:description", content: "Daily free & VIP football betting tips with a 95% success rate." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   loader: ({ context }) => {

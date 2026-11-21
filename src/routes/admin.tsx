@@ -52,7 +52,16 @@ import {
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Admin — TipKings" }] }),
+  head: () => ({
+    meta: [
+      { title: "Prediction Management — TipKings" },
+      { name: "description", content: "Manage TipKings football predictions and winning history." },
+      { property: "og:title", content: "Prediction Management — TipKings" },
+      { property: "og:description", content: "Manage TipKings football predictions and winning history." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: AdminPage,
 });
 

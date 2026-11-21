@@ -40,8 +40,8 @@ function detectCurrencyFromIp(ip: string | undefined): Promise<Currency> {
   })();
 }
 
-/** Initialize a Korapay charge and return the hosted checkout URL. */
-export const initializeKorapayCharge = createServerFn({ method: "POST" })
+/** Create a pending subscription and return trusted details for Kora Checkout. */
+export const prepareKorapayModalCharge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
     z
@@ -54,9 +54,6 @@ export const initializeKorapayCharge = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const secret = process.env.KORAPAY_SECRET_KEY;
-    if (!secret) throw new Error("Payment provider is not configured.");
-
     const plan = plans.find((p) => p.id === data.planId);
     if (!plan) throw new Error("Invalid plan selected.");
 
@@ -66,8 +63,9 @@ export const initializeKorapayCharge = createServerFn({ method: "POST" })
     const amount = planAmount(plan, currency);
 
     const host = getRequestHost();
-    const origin = host ? `https://${host}` : "";
-    const reference = `tk_${plan.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    if (!host) throw new Error("Could not prepare payment. Please try again.");
+    const notificationUrl = `https://${host}/api/public/korapay-webhook`;
+    const reference = `tk_${plan.id}_${crypto.randomUUID()}`;
 
     // Record a pending subscription tied to the signed-in user.
     const { error: subErr } = await context.supabase.from("subscriptions").insert({
@@ -83,34 +81,7 @@ export const initializeKorapayCharge = createServerFn({ method: "POST" })
       throw new Error("Could not start payment. Please try again.");
     }
 
-    const res = await fetch("https://api.korapay.com/merchant/api/v1/charges/initialize", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${secret}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        amount,
-        currency,
-        reference,
-        narration: `TipKings ${plan.name} VIP subscription`,
-        redirect_url: `${origin}/payment-status?ref=${reference}`,
-        notification_url: `${origin}/api/public/korapay-webhook`,
-        customer: { email: data.email, name: data.name },
-        metadata: { plan_id: plan.id, plan_name: plan.name, user_id: context.userId },
-      }),
-    });
-
-    const body = (await res.json().catch(() => null)) as
-      | { status?: boolean; message?: string; data?: { checkout_url?: string } }
-      | null;
-
-    if (!res.ok || !body?.status || !body.data?.checkout_url) {
-      console.error("Korapay init failed", res.status, body?.message);
-      throw new Error(body?.message || "Could not start payment. Please try again.");
-    }
-
-    return { checkoutUrl: body.data.checkout_url, reference, currency, amount };
+    return { reference, currency, amount, notificationUrl };
   });
 
 /** Verify a charge status by reference (used by the return/status page). */
@@ -128,11 +99,46 @@ export const verifyKorapayCharge = createServerFn({ method: "GET" })
       | { status?: boolean; data?: { status?: string; amount?: number; currency?: string } }
       | null;
 
-    const status = body?.data?.status ?? "pending";
+    const providerStatus = body?.data?.status ?? "pending";
+    const amount = body?.data?.amount == null ? null : Number(body.data.amount);
+    const currency = body?.data?.currency ?? null;
+    let verified = false;
+
+    if (providerStatus === "success" && amount !== null && currency) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: subscription, error: subscriptionError } = await supabaseAdmin
+        .from("subscriptions")
+        .select("plan_id, amount, currency, status")
+        .eq("reference", data.reference)
+        .maybeSingle();
+
+      if (subscriptionError) throw new Error("Could not confirm your subscription.");
+
+      verified = Boolean(
+        subscription &&
+          subscription.amount === amount &&
+          subscription.currency === currency &&
+          (subscription.status === "pending" || subscription.status === "active"),
+      );
+
+      if (verified && subscription?.status === "pending") {
+        const days = plans.find((plan) => plan.id === subscription.plan_id)?.durationDays ?? 30;
+        const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+        const { error: activationError } = await supabaseAdmin
+          .from("subscriptions")
+          .update({ status: "active", expires_at: expiresAt })
+          .eq("reference", data.reference)
+          .eq("status", "pending");
+
+        if (activationError) throw new Error("Payment was confirmed, but VIP access could not be updated yet.");
+      }
+    }
+
+    const status = providerStatus === "success" && !verified ? "failed" : providerStatus;
     return {
       status,
-      success: status === "success",
-      amount: body?.data?.amount ?? null,
-      currency: body?.data?.currency ?? null,
+      success: verified,
+      amount,
+      currency,
     };
   });
